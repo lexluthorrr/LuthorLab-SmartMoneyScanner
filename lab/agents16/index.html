@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Luthor Lab agents</title>
+<style>
+  :root { --bg: #07060d; --fg: #cfd8e3; --muted: #6f7a8c; }
+  body { margin: 0; background: var(--bg); color: var(--fg); font: 14px/1.4 ui-monospace, Menlo, Consolas, monospace;
+         display: flex; flex-direction: column; align-items: center; gap: 12px; padding: 16px; }
+  canvas { image-rendering: pixelated; max-width: 100%; height: auto; }
+  .row { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; }
+  button { background: #151326; color: var(--fg); border: 1px solid #2c2850; padding: 6px 10px; cursor: pointer; }
+  button.on { border-color: #19ff7a; color: #19ff7a; }
+  small { color: var(--muted); }
+</style>
+</head>
+<body>
+<canvas id="c" width="1080" height="560"></canvas>
+<div class="row" id="states"></div>
+<small>SCANNER / ANALYST / ORACLE - agents16.js, no dependencies</small>
+<script src="agents16.js"></script>
+<script>
+  const c = document.getElementById('c'), ctx = c.getContext('2d');
+  const names = ['SCANNER', 'ANALYST', 'ORACLE'], views = ['up', 'front', 'down'];
+  let state = 'talk';
+  for (const s of ['idle', 'talk', 'laugh', 'scan', 'glitch', 'murmur']) {
+    const b = document.createElement('button');
+    b.textContent = s; b.onclick = () => { state = s; document.querySelectorAll('button').forEach(x => x.classList.toggle('on', x === b)); };
+    if (s === state) b.classList.add('on');
+    document.getElementById('states').appendChild(b);
+  }
+  const t0 = performance.now();
+  function tick(now) {
+    const t = (now - t0) / 1000;
+    ctx.fillStyle = '#07060d'; ctx.fillRect(0, 0, c.width, c.height);
+    names.forEach((n, i) => Agents16.draw(ctx, n, 60 + i * 340, 150, 4, t + i * 0.7, state, views[i]));
+    ctx.fillStyle = '#6f7a8c'; ctx.font = '16px monospace';
+    names.forEach((n, i) => ctx.fillText(n, 60 + i * 340 + 100, 545));
+    requestAnimationFrame(tick);
+  }
+  requestAnimationFrame(tick);
+</script>
+</body>
+</html>

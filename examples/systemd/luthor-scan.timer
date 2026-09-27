@@ -1,0 +1,12 @@
+# Run luthor-scan.service every 2 hours.
+# sudo systemctl daemon-reload && sudo systemctl enable --now luthor-scan.timer
+[Unit]
+Description=Luthor Lab scan every 2 hours
+
+[Timer]
+OnBootSec=5min
+OnUnitActiveSec=2h
+Persistent=true
+
+[Install]
+WantedBy=timers.target

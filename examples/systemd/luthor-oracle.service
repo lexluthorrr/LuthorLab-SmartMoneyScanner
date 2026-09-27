@@ -1,0 +1,16 @@
+# Luthor Lab ORACLE Telegram bot. Copy to /etc/systemd/system/ after replacing the placeholders.
+[Unit]
+Description=Luthor Lab ORACLE Telegram bot (read-only)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+User=YOUR_USER
+WorkingDirectory=/path/to/luthor-lab
+ExecStart=/path/to/luthor-lab/.venv/bin/python -m lab.oracle
+Restart=on-failure
+RestartSec=30
+NoNewPrivileges=true
+
+[Install]
+WantedBy=multi-user.target

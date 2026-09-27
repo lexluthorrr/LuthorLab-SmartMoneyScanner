@@ -1,0 +1,13 @@
+# One read-only scan. Triggered by luthor-scan.timer.
+[Unit]
+Description=Luthor Lab scan (read-only public data)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=YOUR_USER
+WorkingDirectory=/path/to/luthor-lab
+ExecStart=/path/to/luthor-lab/.venv/bin/python -m lab.scan --quiet
+TimeoutStartSec=300
+NoNewPrivileges=true

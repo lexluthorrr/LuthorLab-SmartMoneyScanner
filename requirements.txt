@@ -1,0 +1,6 @@
+# Core (scanner, analyst, tester, skeptic, oracle): Python 3.11+ standard library only.
+# Nothing below is needed to run `python -m lab.scan`.
+
+# Optional, VERIFIER only (phone-style recording of a public Polymarket profile).
+# After installing run: python -m playwright install chromium   (ffmpeg comes from your OS)
+playwright>=1.45

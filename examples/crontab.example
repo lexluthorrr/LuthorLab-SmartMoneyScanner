@@ -1,0 +1,3 @@
+# Luthor Lab: scan public data every 2 hours (read-only).
+# Replace /path/to/luthor-lab with your folder, then add with: crontab -e
+0 */2 * * * cd /path/to/luthor-lab && .venv/bin/python -m lab.scan --quiet >> data/scan.log 2>&1

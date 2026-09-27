@@ -1,0 +1,25 @@
+# secrets
+.env
+.env.*
+!.env.example
+
+# outputs (digest, signals, proofs, bot state, downloaded CSVs)
+data/
+out/
+**/out/
+proof/
+*.mp4
+frames/
+*.log
+
+# python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+
+# editors / OS
+.DS_Store
+.idea/
+.vscode/
