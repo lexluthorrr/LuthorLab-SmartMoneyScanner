@@ -160,3 +160,49 @@ The bot already scans on its own schedule, so you need either the bot or the tim
 | bot: `HTTP 401` | wrong `TELEGRAM_BOT_TOKEN` |
 | bot: `409` in `data/oracle/oracle.log` | another copy of the bot (or a webhook) uses the same token |
 | bot does not answer | `TELEGRAM_CHAT_ID` is not your chat; check with `getUpdates` (step 7.3) |
+
+## ORACLE_ALLOW_CLAUDE in detail
+
+> **Warning: ORACLE_ALLOW_CLAUDE=1**
+>
+> This forwards free-text messages from your chat to Claude Code on your machine.
+> - `ORACLE_CLAUDE_MODE=readonly` (default when enabled): Claude can only read files in the repo
+>   (Read, Grep, Glob). It cannot run commands or change anything.
+> - `ORACLE_CLAUDE_MODE=full`: Claude can run **any command** on this machine with your user's
+>   permissions. Anyone who gets access to your Telegram account or chat can do the same.
+>
+> In both modes the system prompt forbids trading, touching keys and posting, and requires Claude to
+> describe any irreversible step and wait for an explicit "yes" before doing it. A prompt is not a
+> sandbox: use `full` only on a machine you are ready to lose, never on one that holds keys or funds.
+
+## Known limitations
+
+- Public APIs change and rate-limit. A failing source shows up as an `error` field and in the summary;
+  the rest of the scan still completes within its time budget (default 75 s).
+- The Solana public RPC blocks `getTokenLargestAccounts` on the free tier; holders come from a public
+  keyless gateway or RugCheck when those answer.
+- Hyperliquid's leaderboard is cached (about an hour); positions and P&L are read live per account.
+- Polymarket profile numbers are what the profile page shows; the leaderboard is used only to find
+  wallets. A young wallet's period P&L is its all-time total.
+- Signals are prompts to check something, not trade ideas. Nothing here is financial advice.
+- The unsourced-number check allows rounding and sums of two source numbers, so against a large
+  source (a whole digest) a wrong number can match by chance. Check against the finding itself.
+- VERIFIER depends on the current layout of polymarket.com and may need selector updates.
+- TESTER's template rule is deliberately simple. Fees, slippage and the t-stat bar are parameters;
+  set them for your venue.
+
+## Repository layout
+
+```
+lab/
+  scan.py               python -m lab.scan
+  net.py, config.py     shared HTTP helpers (time budget), settings from .env
+  scanner/              perps.py, memes.py, polymarket.py, signals.py
+  analyst/              numbers.py (unsourced numbers), signals.py (plain-language signals)
+  tester/               README.md (six filters), walkforward.py
+  verifier/             proof.py (phone recording + frame check)
+  skeptic/              second opinion via `claude -p` without tools
+  oracle/               Telegram bot (bot.py, tg.py)
+  agents16/             pixel agents for visuals (agents16.js + index.html demo)
+examples/               cron and systemd templates
+```
