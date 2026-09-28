@@ -14,7 +14,7 @@ If it prints 3.11 or higher, continue. Otherwise install Python from https://www
 ## 2. Get the code
 
 ```bash
-git clone <this-repo-url> luthor-lab
+git clone https://github.com/lexluthorrr/luthor-lab luthor-lab
 cd luthor-lab
 ```
 
