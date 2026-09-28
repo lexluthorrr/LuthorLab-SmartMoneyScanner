@@ -1,4 +1,4 @@
-# Luthor Lab
+# Luthor Lab — Smart Money Scanner
 
 A read-only crypto market research lab built from small AI-agent roles. It pulls public data
 from Hyperliquid, Ethereum, Solana, DexScreener, pump.fun and Polymarket, turns it into plain-language
@@ -91,7 +91,7 @@ Signals format (`python -m lab.analyst`):
 ## Quick start
 
 ```bash
-git clone https://github.com/lexluthorrr/luthor-lab && cd luthor-lab
+git clone https://github.com/lexluthorrr/LuthorLab-SmartMoneyScanner && cd luthor-lab
 python3 -m lab.scan --dry        # offline self-check, no network
 python3 -m lab.scan              # real scan, about a minute, writes data/digest.json
 ```
@@ -112,7 +112,7 @@ step by step in [SETUP.md](SETUP.md).
 Paste this into Claude Code, Codex or a similar coding assistant, opened in an empty folder:
 
 ```text
-Clone https://github.com/lexluthorrr/luthor-lab into ./luthor-lab and set it up for me.
+Clone https://github.com/lexluthorrr/LuthorLab-SmartMoneyScanner into ./luthor-lab and set it up for me.
 Read AGENTS.md first and follow it exactly.
 1. Check that Python 3.11+ is available and create a virtual environment in .venv.
 2. Run `python -m lab.scan --dry`, then a real `python -m lab.scan`, then `python -m lab.analyst`
