@@ -24,7 +24,7 @@ The person who asked you trusts that installing it cannot hurt them. Keep it tha
 - Ask the user to paste a bot token or any secret into the chat. Tell them which line of `.env`
   to fill in themselves. Never print `.env` contents.
 - Set `ORACLE_ALLOW_CLAUDE=1` or `ORACLE_CLAUDE_MODE=full` on your own. Only if the user asks
-  explicitly, after you have shown them the warning in README.md ("Safety") and they confirm.
+  explicitly, after you have shown them the warning in README.md ("Safety") and SETUP.md ("ORACLE_ALLOW_CLAUDE in detail") and they confirm.
 - Install cron jobs or systemd services, or start the bot as a background service, without the
   user's explicit confirmation. Show the exact file you would install first.
 - Post, publish, push to git remotes or send messages anywhere.
