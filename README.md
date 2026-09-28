@@ -112,7 +112,7 @@ step by step in [SETUP.md](SETUP.md).
 Paste this into Claude Code, Codex or a similar coding assistant, opened in an empty folder:
 
 ```text
-Clone <this-repo-url> into ./luthor-lab and set it up for me.
+Clone https://github.com/lexluthorrr/luthor-lab into ./luthor-lab and set it up for me.
 Read AGENTS.md first and follow it exactly.
 1. Check that Python 3.11+ is available and create a virtual environment in .venv.
 2. Run `python -m lab.scan --dry`, then a real `python -m lab.scan`, then `python -m lab.analyst`
@@ -123,6 +123,14 @@ Read AGENTS.md first and follow it exactly.
    to fill in myself; do not ask me to paste the token into this chat.
 Summarize what works and what was skipped.
 ```
+
+## Support the project
+
+Luthor Lab is free. If it saved you time:
+
+- ⭐ **Star the repo.** It's the only way others find it.
+- **Follow [@mr_luth0r](https://x.com/mr_luth0r) on X.** New agents, test results and write-ups land there first.
+- **Share what your scanner finds** in the replies. The best finds get a shout-out.
 
 ## Safety
 
