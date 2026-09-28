@@ -1,0 +1,14 @@
+name: self-check
+on: [push, pull_request]
+jobs:
+  dry-run:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Offline self-check
+        run: python -m lab.scan --dry
+      - name: Tester demo
+        run: python -m lab.tester.walkforward --demo

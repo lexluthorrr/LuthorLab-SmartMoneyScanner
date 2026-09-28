@@ -11,8 +11,6 @@ It finds:
 
 Read-only: no API keys, no wallets, no trading, no posting.
 
-![SCANNER, ANALYST and ORACLE pixel agents](docs/agents.png)
-
 ## Requirements
 
 - Python **3.11+** (https://www.python.org/downloads/)
