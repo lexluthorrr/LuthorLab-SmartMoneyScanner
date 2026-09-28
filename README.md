@@ -91,7 +91,7 @@ Signals format (`python -m lab.analyst`):
 ## Quick start
 
 ```bash
-git clone <this-repo-url> luthor-lab && cd luthor-lab
+git clone https://github.com/lexluthorrr/luthor-lab && cd luthor-lab
 python3 -m lab.scan --dry        # offline self-check, no network
 python3 -m lab.scan              # real scan, about a minute, writes data/digest.json
 ```
