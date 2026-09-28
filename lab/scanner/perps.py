@@ -20,7 +20,7 @@ from lab.net import get, getj, pmap_dict, safe, usd
 HL_INFO = "https://api.hyperliquid.xyz/info"
 HL_LEADERBOARD = "https://stats-data.hyperliquid.xyz/Mainnet/leaderboard"
 HL_ALIASES = "https://api.hypurrscan.io/globalAliases"   # public display names of Hyperliquid addresses
-HL_ADDR = "app.hyperliquid.xyz/explorer/address/"
+HL_ADDR = "www.coinglass.com/hyperliquid/"
 # system and exchange accounts are not whales (treasuries, deployers, HLP, liquidator, exchanges)
 HL_SYSTEM = re.compile(r"treasury|deployer|vault|hlp|liquidator|assistance|fund|bridge|fee|\bdev\b|"
                        r"gate\.io|bitvavo|bitget|kucoin|binance|okx|bybit", re.I)

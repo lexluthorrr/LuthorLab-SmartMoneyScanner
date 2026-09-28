@@ -64,7 +64,7 @@ Luthor Lab scan - <UTC time> - <seconds> s - read-only public data
 
 Hyperliquid whale positions
   - <Long|Short> <COIN> $<size> at <lev>x, <up|down> $<pnl> right now; ...
-    app.hyperliquid.xyz/explorer/address/<address>
+    www.coinglass.com/hyperliquid/<address>
 
 Paper market caps (cap >= 100x pool)
   - <SYM>: market cap $<cap> on paper vs $<pool> in the pool (<N>x); ...
