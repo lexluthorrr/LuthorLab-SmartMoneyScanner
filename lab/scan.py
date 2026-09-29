@@ -4,7 +4,10 @@ Read-only: every request is a public GET (or a read-only JSON-RPC call). No keys
 
   python -m lab.scan                 full scan (about 60-90 s)
   python -m lab.scan --only memes    one module (perps, memes, polymarket, signals)
-  python -m lab.scan --dry           offline self-check: imports, data dir, optional tools
+  python -m lab.scan --dry           offline self-check: imports, data dir, optional tools, memory
+
+After a scan, lab.memory remembers every finding in data/lab.db: each one is flagged new or seen before
+(with the change since last time), and a few outcome checks run if budget is left.
 """
 from __future__ import annotations
 
@@ -21,6 +24,8 @@ from lab import config, net
 from lab.scanner import MODULES
 
 DEFAULT_BUDGET_S = 75
+OUTCOME_MIN_LEFT_S = 8        # outcome checks after a scan run only if at least this much budget is left
+OUTCOME_MAX_CHECKS = 12
 
 
 def run(only: list[str] | None = None, budget_s: float = DEFAULT_BUDGET_S) -> dict:
@@ -75,16 +80,30 @@ def _label(x: dict) -> str:
     return ""
 
 
+def _seen_tag(x: dict) -> str:
+    """' [seen 3x since Sep 28; size +$20.0M since last seen]' for repeats, '' otherwise."""
+    if x.get("new") is not False:
+        return ""
+    from lab.memory import day
+    tag = f"seen {x.get('times_seen')}x since {day(x.get('first_seen'))}"
+    return f" [{tag}; {x['delta']} since last seen]" if x.get("delta") else f" [{tag}]"
+
+
 def _line(x: dict) -> str:
     url = x.get("url") or x.get("tx") or ""
-    return f"  - {_label(x)}{x.get('summary', '')}" + (f"\n    {url}" if url else "")
+    new = "NEW " if x.get("new") is True else ""
+    return f"  - {new}{_label(x)}{x.get('summary', '')}{_seen_tag(x)}" + (f"\n    {url}" if url else "")
 
 
-def summarize(d: dict, per_section: int = 3) -> list[tuple[str, list[str]]]:
-    """[(section title, lines)] with the most readable findings of a digest."""
+def summarize(d: dict, per_section: int = 3, only_new: bool = False) -> list[tuple[str, list[str]]]:
+    """[(section title, lines)] with the most readable findings of a digest.
+
+    only_new: keep only findings memory flagged as new (if memory did not run, keep everything)."""
     out: list[tuple[str, list[str]]] = []
+    only_new = only_new and isinstance(d.get("memory"), dict)
 
     def add(title: str, rows: list, n: int = per_section) -> None:
+        rows = [x for x in rows if isinstance(x, dict) and (not only_new or x.get("new") is True)]
         lines = [_line(x) for x in rows[:n] if isinstance(x, dict) and x.get("summary")]
         if lines:
             out.append((title, lines))
@@ -139,9 +158,20 @@ def errors(d: dict) -> list[str]:
     return out
 
 
+def memory_line(d: dict) -> str | None:
+    m = d.get("memory")
+    if not isinstance(m, dict):
+        return None
+    prev = f" (previous scan {m['previous_scan'][:16].replace('T', ' ')} UTC)" if m.get("previous_scan") else " (first scan)"
+    return (f"Memory: {m.get('new')} new, {m.get('seen_before')} seen before, {m.get('changed')} changed materially"
+            + prev)
+
+
 def render(d: dict, per_section: int = 3) -> str:
     head = f"Luthor Lab scan - {d.get('collected_at')} - {d.get('took_s')} s - read-only public data"
     parts = [head, "=" * len(head)]
+    if memory_line(d):
+        parts.append(memory_line(d))
     for title, lines in summarize(d, per_section):
         parts.append(f"\n{title}")
         parts.extend(lines)
@@ -150,6 +180,33 @@ def render(d: dict, per_section: int = 3) -> str:
         parts.append("\nSources that failed or timed out:")
         parts.extend(f"  - {e}" for e in errs[:12])
     return "\n".join(parts)
+
+
+# ---------------------------------------------------------------- memory
+
+def remember(d: dict) -> dict | None:
+    """Flag findings new / seen before and store them in data/lab.db. Never breaks a scan."""
+    try:
+        from lab import memory
+        return memory.remember(d)
+    except Exception as e:
+        print(f"warning: memory not updated ({type(e).__name__}: {str(e)[:150]})", file=sys.stderr)
+        return None
+
+
+def outcome_pass(deadline: float) -> dict | None:
+    """A few outcome checks with whatever is left of the scan budget. Never breaks a scan."""
+    if deadline - time.time() < OUTCOME_MIN_LEFT_S:
+        return None
+    try:
+        from lab import memory
+        net.set_deadline(deadline)
+        return memory.check_outcomes(max_checks=OUTCOME_MAX_CHECKS)
+    except Exception as e:
+        print(f"warning: outcome checks skipped ({type(e).__name__}: {str(e)[:150]})", file=sys.stderr)
+        return None
+    finally:
+        net.set_deadline(None)
 
 
 # ---------------------------------------------------------------- self-check
@@ -193,6 +250,13 @@ def dry() -> int:
     tg = "set" if os.environ.get("TELEGRAM_BOT_TOKEN") and os.environ.get("TELEGRAM_CHAT_ID") else "not set (ORACLE disabled)"
     print(f"optional: Telegram settings {tg}")
     print(f"ORACLE_ALLOW_CLAUDE={'1 (Claude execution ENABLED in the bot)' if config.flag('ORACLE_ALLOW_CLAUDE') else '0 (off)'}")
+    try:
+        from lab import memory
+        mem_ok, msg = memory.self_test()
+    except Exception as e:
+        mem_ok, msg = False, f"{type(e).__name__}: {e}"
+    ok &= mem_ok
+    print(f"memory (temp dir, offline): {'ok' if mem_ok else 'FAILED'} - {msg}")
     print("self-check:", "OK" if ok else "FAILED")
     return 0 if ok else 1
 
@@ -214,10 +278,16 @@ def main(argv: list[str] | None = None) -> int:
         ap.error(f"unknown module(s): {', '.join(bad)}; choose from {', '.join(MODULES)}")
     if not a.quiet:
         print(f"Scanning public sources ({', '.join(only or MODULES)}), budget {a.budget:.0f} s...", flush=True)
+    t0 = time.time()
     d = run(only or None, a.budget)
+    remember(d)
     path = save(d, a.out)
+    checked = outcome_pass(t0 + a.budget)
     if not a.quiet:
         print(render(d))
+        if checked and (checked["checked"] or checked["missed"]):
+            print(f"\nOutcome checks: {checked['checked']} done, {checked['left']} pending "
+                  f"(python -m lab.memory report)")
         print(f"\nSaved: {os.path.relpath(path)}")
     return 0
 

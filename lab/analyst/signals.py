@@ -135,6 +135,16 @@ def stablecoin_flow(t: dict) -> dict | None:
                 2, t.get("tx"), usd=t.get("usd"), frm=t.get("from"), to=t.get("to"), age_h=t.get("age_h"))
 
 
+MEMORY_FIELDS = ("new", "first_seen", "times_seen", "delta")
+
+
+def _mem(sig: dict | None, item: dict) -> dict | None:
+    """Carry lab.memory flags (new / first_seen / times_seen / delta) from the finding to its signal."""
+    if sig:
+        sig.update({k: item[k] for k in MEMORY_FIELDS if k in item})
+    return sig
+
+
 def from_digest(d: dict) -> list[dict]:
     """All signals found in a digest, strongest first."""
     out: list[dict] = []
@@ -145,27 +155,28 @@ def from_digest(d: dict) -> list[dict]:
         if c.get("url") in seen:
             continue
         seen.add(c.get("url"))
-        out.append(cap_vs_pool(c))
+        out.append(_mem(cap_vs_pool(c), c))
     for h in _l(memes, "holders"):
-        out.extend(holder_signals(h))
+        out.extend(_mem(s, h) for s in holder_signals(h))
 
     perps = d.get("perps") or {}
-    out.extend(liquidation(p) for p in _l(perps, "hyperliquid", "positions"))
-    out.extend(stablecoin_flow(t) for t in _l(perps, "eth_transfers", "items"))
+    out.extend(_mem(liquidation(p), p) for p in _l(perps, "hyperliquid", "positions"))
+    out.extend(_mem(stablecoin_flow(t), t) for t in _l(perps, "eth_transfers", "items"))
 
     sig = d.get("signals") or {}
     for w in _l(sig, "fresh_wallets"):
-        out.append(wallet_age(w))
-        out.append(win_vs_total(w.get("name") or w.get("wallet", "")[:10], w.get("biggest_win"), w.get("profile"), w.get("url")))
+        out.append(_mem(wallet_age(w), w))
+        out.append(_mem(win_vs_total(w.get("name") or w.get("wallet", "")[:10], w.get("biggest_win"), w.get("profile"),
+                                     w.get("url")), w))
     for b in _l(sig, "timed_bets"):
-        out.append(timed_bet(b))
+        out.append(_mem(timed_bet(b), b))
 
     wh = d.get("polymarket") or {}
     for key in ("top_day_overall", "top_week_crypto"):
         for r in _l(wh, key):
             prof = r.get("profile") or {}
-            out.append(win_vs_total(r.get("name") or (r.get("wallet") or "")[:10], prof.get("biggest_win_resolved"),
-                                    prof, prof.get("profile_url")))
+            out.append(_mem(win_vs_total(r.get("name") or (r.get("wallet") or "")[:10], prof.get("biggest_win_resolved"),
+                                         prof, prof.get("profile_url")), r))
 
     uniq, keys = [], set()
     for s in out:

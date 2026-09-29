@@ -6,6 +6,7 @@ Settings (.env or environment):
   TELEGRAM_BOT_TOKEN      token from @BotFather (required)
   TELEGRAM_CHAT_ID        the only chat the bot answers (required; your private chat id)
   ORACLE_SCAN_EVERY_MIN   scheduled scan summary interval in minutes (default 240, 0 = off)
+                          scheduled summaries and /scan send only findings that are new (lab.memory)
   ORACLE_ALLOW_CLAUDE     1 = free-text messages go to Claude Code (default 0 = off)
   ORACLE_CLAUDE_MODE      readonly (default: Read/Grep/Glob only) or full (any command, see README warning)
 
@@ -28,8 +29,9 @@ from lab.oracle.tg import Telegram, pack
 
 HELP = """Luthor Lab ORACLE (read-only research)
 
-/scan - run the scanner now and send the summary
+/scan - run the scanner now and send what is new since the last scan
 /signals - top signals from the last scan
+/outcomes - what happened to past findings (hit-rates with n)
 /status - last scan time, schedule, settings
 /help - this message
 {claude_help}
@@ -139,16 +141,23 @@ class Oracle:
             self.scan_lock.release()
 
     def report(self, reason: str) -> list[str]:
+        """Only findings memory flagged as new; if memory did not run, everything (as before)."""
         from lab.analyst import from_digest
-        from lab.scan import errors, summarize
+        from lab.scan import errors, memory_line, summarize
         d = json.loads((config.data_dir() / "digest.json").read_text())
+        mem = d.get("memory") if isinstance(d.get("memory"), dict) else None
         head = f"Luthor Lab scan ({reason}) - {d.get('collected_at')} - {d.get('took_s')} s"
+        head += f"\n{memory_line(d)}. Only new findings below." if mem else "\n(memory unavailable: showing everything)"
         sections = [head]
-        for title, lines in summarize(d, per_section=2):
+        for title, lines in summarize(d, per_section=2, only_new=True):
             sections.append(title + "\n" + "\n".join(lines))
-        sigs = from_digest(d)[:5]
+        sigs = [s for s in from_digest(d) if not mem or s.get("new") is True][:5]
         if sigs:
-            sections.append("Top signals\n" + "\n".join(f"  - {s['headline']}" for s in sigs))
+            sections.append("Top new signals\n" if mem else "Top signals\n")
+            sections[-1] += "\n".join(f"  - {s['headline']}" for s in sigs)
+        if mem and len(sections) == 1:
+            sections.append(f"Nothing new since the last scan ({mem.get('seen_before', 0)} findings seen before). "
+                            "/signals shows the latest full list, /outcomes what happened to past ones.")
         errs = errors(d)
         if errs:
             sections.append(f"{len(errs)} source(s) failed: " + "; ".join(e.split(':')[0] for e in errs[:6]))
@@ -225,6 +234,9 @@ class Oracle:
             return threading.Thread(target=self.scan_and_report, args=("on request",), daemon=True).start()
         if cmd == "/signals":
             return self.say(self.signals_text())
+        if cmd == "/outcomes":
+            from lab import memory
+            return self.say(memory.report_text())
         if cmd == "/status":
             every = self.s["every_min"]
             return self.say(f"Last scan: {self.state.get('last_scan') or 'never'}\n"
