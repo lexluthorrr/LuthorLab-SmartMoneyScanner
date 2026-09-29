@@ -9,6 +9,8 @@ It finds:
 - USDT / USDC transfers of $20M+ on Ethereum, pump.fun launch and dump stats
 - Plus a walk-forward tester to check a trading idea before any money goes in
 
+It remembers what it has seen between runs and alerts only on what's new.
+
 Read-only: no API keys, no wallets, no trading, no posting.
 
 ## Requirements
@@ -69,6 +71,7 @@ python -m lab.scan
 ```
 
 Takes about a minute. It prints a summary and saves everything to `data/digest.json`.
+Run it again later: new findings are tagged `NEW`, repeats show when they were first seen and what changed.
 
 Only one part:
 
@@ -82,7 +85,13 @@ python -m lab.scan --only perps        # or: memes, polymarket, signals
 python -m lab.analyst signals
 ```
 
-### 6) Test a trading idea before money
+### 6) See what happened to past signals
+
+```bash
+python -m lab.memory report
+```
+
+### 7) Test a trading idea before money
 
 ```bash
 python -m lab.tester.walkforward --demo              # example on synthetic data
@@ -92,7 +101,7 @@ python -m lab.tester.walkforward your_prices.csv     # your own price file
 
 Fees and slippage are flags: `--fee-bps 10 --slippage-bps 5`.
 
-### 7) (Optional) Record a Polymarket profile like on a phone
+### 8) (Optional) Record a Polymarket profile like on a phone
 
 ```bash
 pip install -r requirements.txt
@@ -102,7 +111,7 @@ python -m lab.verifier <polymarket-username>
 
 Needs ffmpeg installed on your system.
 
-### 8) (Optional) Telegram alerts
+### 9) (Optional) Telegram alerts
 
 ```bash
 cp .env.example .env

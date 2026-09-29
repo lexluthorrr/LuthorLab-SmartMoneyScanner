@@ -36,6 +36,7 @@ required for them.
 python -m lab.scan --dry                       # offline self-check
 python -m lab.scan                             # real scan, ~1 minute -> data/digest.json
 python -m lab.analyst                          # signals -> data/signals.json
+python -m lab.memory report                    # what happened to past findings (hit-rates with n)
 python -m lab.tester.walkforward --demo        # walk-forward on a synthetic random walk
 ```
 
@@ -43,6 +44,12 @@ python -m lab.tester.walkforward --demo        # walk-forward on a synthetic ran
 If a source is down, it is listed under "Sources that failed"; that is normal.
 
 Useful flags: `python -m lab.scan --only memes` (one module), `--budget 60` (time limit in seconds).
+
+Memory: every scan is remembered in `data/lab.db`. Findings are tagged `NEW` or `seen Nx since <date>`
+with the change since last time, and about 1 and 7 days after a finding first shows up it is checked
+again with the same public data (liquidated? coin dead? wallet gave its profit back?). A few checks
+run at the end of each scan if time is left; `python -m lab.memory outcomes` runs all pending ones.
+Rows older than 30 days are deleted (`LAB_MEMORY_DAYS` in `.env`).
 
 ## 5. VERIFIER (optional): record a public Polymarket profile
 
@@ -89,7 +96,8 @@ If `claude` is not on your PATH, set `CLAUDE_BIN=/full/path/to/claude` in `.env`
    ```bash
    python -m lab.oracle
    ```
-   In Telegram send `/help`, then `/scan`.
+   In Telegram send `/help`, then `/scan`. Scheduled summaries and `/scan` send only what is new
+   since the last scan; `/outcomes` shows what happened to past findings.
 
 Settings in `.env`:
 
@@ -196,6 +204,7 @@ The bot already scans on its own schedule, so you need either the bot or the tim
 ```
 lab/
   scan.py               python -m lab.scan
+  memory.py             python -m lab.memory: what the lab remembers between runs (data/lab.db)
   net.py, config.py     shared HTTP helpers (time budget), settings from .env
   scanner/              perps.py, memes.py, polymarket.py, signals.py
   analyst/              numbers.py (unsourced numbers), signals.py (plain-language signals)

@@ -11,6 +11,7 @@ The person who asked you trusts that installing it cannot hurt them. Keep it tha
   - `python -m lab.scan --dry` (offline self-check)
   - `python -m lab.scan` or `python -m lab.scan --only <perps|memes|polymarket|signals>`
   - `python -m lab.analyst`, `python -m lab.analyst demo`, `python -m lab.analyst check "<text>"`
+  - `python -m lab.memory report` (local file only) and `python -m lab.memory outcomes` (public data only)
   - `python -m lab.tester.walkforward --demo` or with `--fetch BTC-USD`
   - `python -m lab.verifier <public polymarket username>`
   - `python -m lab.skeptic` (only if the Claude Code CLI is installed and logged in)
@@ -48,7 +49,7 @@ Only mention it. Do not star, follow, fork or open anything on the user's behalf
    Optional parts (playwright, ffmpeg, claude, Telegram) may be reported as missing; that is fine.
 2. `python -m lab.scan` finishes in under ~90 seconds, prints a summary and `Saved: data/digest.json`.
    A few sources in "Sources that failed" is normal (rate limits); all of them failing means no
-   internet access.
+   internet access. A second scan a few minutes later marks repeats `[seen 2x since ...]`.
 3. `python -m lab.analyst` prints signals and writes `data/signals.json`.
 4. `python -m lab.tester.walkforward --demo` prints a table where out-of-sample is `DEAD`
    (the demo data is a random walk, so that is the correct result).
@@ -64,4 +65,7 @@ Report to the user what ran, what was skipped (and why), and where the output fi
 - Collectors are wrapped in `@safe`: a failing source returns `{"error": ...}` and never breaks the scan.
 - Every number in the digest must come from an API response. Findings carry a `summary` string
   and a `url` a reader can open.
+- Memory between runs lives in code and in `data/lab.db` (`lab/memory.py`), never in a model: models
+  only get fresh facts and flags (`new`, `first_seen`, `times_seen`, `delta`). A memory error must
+  never break a scan.
 - Comments in English, short.
