@@ -89,9 +89,9 @@ def _seen_tag(x: dict) -> str:
     return f" [{tag}; {x['delta']} since last seen]" if x.get("delta") else f" [{tag}]"
 
 
-def _line(x: dict) -> str:
+def _line(x: dict, tag_new: bool = True) -> str:
     url = x.get("url") or x.get("tx") or ""
-    new = "NEW " if x.get("new") is True else ""
+    new = "NEW " if tag_new and x.get("new") is True else ""   # in an only-new summary every line is new
     return f"  - {new}{_label(x)}{x.get('summary', '')}{_seen_tag(x)}" + (f"\n    {url}" if url else "")
 
 
@@ -104,7 +104,7 @@ def summarize(d: dict, per_section: int = 3, only_new: bool = False) -> list[tup
 
     def add(title: str, rows: list, n: int = per_section) -> None:
         rows = [x for x in rows if isinstance(x, dict) and (not only_new or x.get("new") is True)]
-        lines = [_line(x) for x in rows[:n] if isinstance(x, dict) and x.get("summary")]
+        lines = [_line(x, tag_new=not only_new) for x in rows[:n] if isinstance(x, dict) and x.get("summary")]
         if lines:
             out.append((title, lines))
 
